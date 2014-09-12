@@ -1,0 +1,6 @@
+-cp Rx
+-main Test
+-js bin/test.js
+
+-dce full
+-debug

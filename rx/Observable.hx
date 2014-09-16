@@ -5,6 +5,7 @@ import rx.scheduler.IScheduler;
 import rx.scheduler.ICurrentThreadScheduler;
 import rx.scheduler.Scheduler;
 import rx.Observer;
+import rx.Notification;
 import rx.promise.IPromise;
 
 
@@ -23,6 +24,7 @@ extern interface IObservable<T> {
 
 typedef SelectorFunc<T, U> = T -> Int -> Observable<T> -> U;
 typedef Predicate<T> = T -> Int -> Observable<T> -> Bool;
+
 // resolver, rejector
 typedef PromiseResolver<T> = (T -> Void) -> (Dynamic -> Void);
 typedef PromiseCtor<T, TPromise: IPromise<T>> = {
@@ -71,17 +73,18 @@ extern class Observable<T> implements IObservable<T> {
   public function forEach(?onNext: T -> Void, ?onError: Dynamic -> Void, ?onCompleted: Void -> Void): IDisposable;
   public function toArray(): Observable<Iterable<T>>;
 
-  @:native('catch')
+  // @:native('catch')
+  // @:overload(function(handler: Dynamic -> IPromise<T>): Observable<T> {})
+  // @:overload(function(second: Observable<T>): Observable<T> {})
+  // public function catch_(handler: Dynamic -> Observable<T>): Observable<T>;
+
+  /* alias for catch */
   @:overload(function(handler: Dynamic -> IPromise<T>): Observable<T> {})
   @:overload(function(second: Observable<T>): Observable<T> {})
-  public function catch_(handler: Dynamic -> Observable<T>): Observable<T>;
+  public function catchException(handler: Dynamic -> Observable<T>): Observable<T>
 
-  @:overload(function(handler: Dynamic -> IPromise<T>): Observable<T> {})
-  @:overload(function(second: Observable<T>): Observable<T> {})
-  public function catchException(handler: Dynamic -> Observable<T>): Observable<T>;  // alias for catch
-
-  // public function combineLatest<T2, TResult>(second: Observable<T2>, resultSelector: (v1: T, v2: T2) -> TResult): Observable<TResult>;
-  // public function combineLatest<T2, TResult>(second: IPromise<T2>, resultSelector: (v1: T, v2: T2) -> TResult): Observable<TResult>;
+  @:overload(function <T2, TResult>(second: Observable<T2>, resultSelector: T -> T2 -> TResult): Observable<TResult> {})
+  public function combineLatest<T2, TResult>(second: IPromise<T2>, resultSelector: T -> T2 -> TResult): Observable<TResult>;
   // public function combineLatest<T2, T3, TResult>(second: Observable<T2>, third: Observable<T3>, resultSelector: (v1: T, v2: T2, v3: T3) -> TResult): Observable<TResult>;
   // public function combineLatest<T2, T3, TResult>(second: Observable<T2>, third: IPromise<T3>, resultSelector: (v1: T, v2: T2, v3: T3) -> TResult): Observable<TResult>;
   // public function combineLatest<T2, T3, TResult>(second: IPromise<T2>, third: Observable<T3>, resultSelector: (v1: T, v2: T2, v3: T3) -> TResult): Observable<TResult>;
@@ -103,11 +106,6 @@ extern class Observable<T> implements IObservable<T> {
   public function concatAll(): T;
   // alias for concatAll
   public function concatObservable(): T;
-  // public function concatMap<T2, R>(selector: (value: T, index: Int) -> Observable<T2>, resultSelector: (value1: T, value2: T2, index: Int) -> R): Observable<R>;  // alias for selectConcat
-  // public function concatMap<T2, R>(selector: (value: T, index: Int) -> IPromise<T2>, resultSelector: (value1: T, value2: T2, index: Int) -> R): Observable<R>;  // alias for selectConcat
-  // public function concatMap<R>(selector: (value: T, index: Int) -> Observable<R>): Observable<R>;  // alias for selectConcat
-  // public function concatMap<R>(selector: (value: T, index: Int) -> IPromise<R>): Observable<R>;  // alias for selectConcat
-  // public function concatMap<R>(sequence: Observable<R>): Observable<R>;  // alias for selectConcat
 
   @:overload(function(other: Observable<T>): Observable<T> {})
   @:overload(function(other: IPromise<T>): Observable<T> {})
@@ -162,41 +160,50 @@ extern class Observable<T> implements IObservable<T> {
   // alias for finally
   public function finallyAction(action: Void -> Void): Observable<T>;
 
-  // public function ignoreElements(): Observable<T>;
-  // public function materialize(): Observable<Notification<T>>;
-  // public function repeat(?repeatCount: Int): Observable<T>;
-  // public function retry(?retryCount: Int): Observable<T>;
-  // public function scan<TAcc>(seed: TAcc, accumulator: (acc: TAcc, value: T) -> TAcc): Observable<TAcc>;
-  // public function scan(accumulator: (acc: T, value: T) -> T): Observable<T>;
-  // public function skipLast(count: Int): Observable<T>;
-  // public function startWith(...values: Iterable<T>): Observable<T>;
-  // public function startWith(scheduler: IScheduler, ...values: Iterable<T>): Observable<T>;
-  // public function takeLast(count: Int, ?scheduler: IScheduler): Observable<T>;
-  // public function takeLastBuffer(count: Int): Observable<Iterable<T>>;
+  public function ignoreElements(): Observable<T>;
+  public function materialize(): Observable<Notification<T>>;
+  public function repeat(?repeatCount: Int): Observable<T>;
+  public function retry(?retryCount: Int): Observable<T>;
+  @:overload(function <TAcc>(seed: TAcc, accumulator: TAcc -> T -> TAcc): Observable<TAcc> {})
+  public function scan(accumulator: T -> T -> T): Observable<T>;
+  public function skipLast(count: Int): Observable<T>;
+  @:overload(function (values: Iterable<T>): Observable<T> {})
+  public function startWith(scheduler: IScheduler, values: Iterable<T>): Observable<T>;
+  public function takeLast(count: Int, ?scheduler: IScheduler): Observable<T>;
+  public function takeLastBuffer(count: Int): Observable<Iterable<T>>;
 
   public function select<TResult>(
       selector: SelectorFunc<T,TResult >, ?thisArg: Dynamic): Observable<TResult>;
   // alias for select
-  public function map<TResult>(
-      selector: SelectorFunc<T, TResult>, ?thisArg: Dynamic): Observable<TResult>;
-  // public function selectMany<TOther, TResult>(selector: (value: T) -> Observable<TOther>, resultSelector: (item: T, other: TOther) -> TResult): Observable<TResult>;
-  // public function selectMany<TOther, TResult>(selector: (value: T) -> IPromise<TOther>, resultSelector: (item: T, other: TOther) -> TResult): Observable<TResult>;
-  // public function selectMany<TResult>(selector: (value: T) -> Observable<TResult>): Observable<TResult>;
-  // public function selectMany<TResult>(selector: (value: T) -> IPromise<TResult>): Observable<TResult>;
-  // public function selectMany<TResult>(other: Observable<TResult>): Observable<TResult>;
-  // public function selectMany<TResult>(other: IPromise<TResult>): Observable<TResult>;
-  // public function flatMap<TOther, TResult>(selector: (value: T) -> Observable<TOther>, resultSelector: (item: T, other: TOther) -> TResult): Observable<TResult>;  // alias for selectMany
-  // public function flatMap<TOther, TResult>(selector: (value: T) -> IPromise<TOther>, resultSelector: (item: T, other: TOther) -> TResult): Observable<TResult>;  // alias for selectMany
-  // public function flatMap<TResult>(selector: (value: T) -> Observable<TResult>): Observable<TResult>;  // alias for selectMany
-  // public function flatMap<TResult>(selector: (value: T) -> IPromise<TResult>): Observable<TResult>;  // alias for selectMany
-  // public function flatMap<TResult>(other: Observable<TResult>): Observable<TResult>;  // alias for selectMany
-  // public function flatMap<TResult>(other: IPromise<TResult>): Observable<TResult>;  // alias for selectMany
+  public function map<TResult>(selector: SelectorFunc<T, TResult>, ?thisArg: Dynamic): Observable<TResult>;
 
-  // public function selectConcat<T2, R>(selector: (value: T, index: Int) -> Observable<T2>, resultSelector: (value1: T, value2: T2, index: Int) -> R): Observable<R>;
-  // public function selectConcat<T2, R>(selector: (value: T, index: Int) -> IPromise<T2>, resultSelector: (value1: T, value2: T2, index: Int) -> R): Observable<R>;
-  // public function selectConcat<R>(selector: (value: T, index: Int) -> Observable<R>): Observable<R>;
-  // public function selectConcat<R>(selector: (value: T, index: Int) -> IPromise<R>): Observable<R>;
-  // public function selectConcat<R>(sequence: Observable<R>): Observable<R>;
+  @:overload(function <TOther, TResult>(selector: T -> Observable<TOther>, resultSelector: T -> TOther -> TResult): Observable<TResult> {})
+  @:overload(function <TOther, TResult>(selector: T -> IPromise<TOther>, resultSelector: T -> TOther -> TResult): Observable<TResult> {})
+  @:overload(function <TResult>(selector: T -> Observable<TResult>): Observable<TResult> {})
+  @:overload(function <TResult>(selector: T -> IPromise<TResult>): Observable<TResult> {})
+  @:overload(function <TResult>(other: Observable<TResult>): Observable<TResult> {})
+  public function selectMany<TResult>(other: IPromise<TResult>): Observable<TResult>;
+
+  // alias for selectMany
+  @:overload(function <TOther, TResult>(selector: T -> Observable<TOther>, resultSelector: T -> TOther -> TResult): Observable<TResult> {})
+  @:overload(function <TOther, TResult>(selector: T -> IPromise<TOther>, resultSelector: T -> TOther -> TResult): Observable<TResult> {})
+  @:overload(function <TResult>(selector: T -> Observable<TResult>): Observable<TResult> {})
+  @:overload(function <TResult>(selector: T -> IPromise<TResult>): Observable<TResult> {})
+  @:overload(function <TResult>(other: Observable<TResult>): Observable<TResult> {})
+  public function flatMap<TResult>(other: IPromise<TResult>): Observable<TResult>;
+
+  @:overload(function <T2, R>(selector: T -> Int -> Observable<T2>, resultSelector: T -> T2 -> Int -> R): Observable<R> {})
+  @:overload(function <T2, R>(selector: T -> Int -> IPromise<T2>, resultSelector: T -> T2 -> Int -> R): Observable<R> {})
+  @:overload(function <R>(selector: T -> Int -> Observable<R>): Observable<R> {})
+  @:overload(function <R>(selector: T -> Int -> IPromise<R>): Observable<R> {})
+  public function selectConcat<R>(sequence: Observable<R>): Observable<R>;
+
+  // alias for selectConcat
+  @:overload(function <T2, R>(selector: T -> Int -> Observable<T2>, resultSelector: T -> T2 -> Int -> R): Observable<R> {})
+  @:overload(function <T2, R>(selector: T -> Int -> IPromise<T2>, resultSelector: T -> T2 -> Int -> R): Observable<R> {})
+  @:overload(function <R>(selector: T -> Int -> Observable<R>): Observable<R> {})
+  @:overload(function <R>(selector: T -> Int -> IPromise<R>): Observable<R> {})
+  public function concatMap<R>(sequence: Observable<R>): Observable<R>;
 
   /**
    *  Projects each element of an observable sequence into a new sequence of observable sequences by incorporating the element's index and then 

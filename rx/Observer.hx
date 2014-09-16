@@ -1,6 +1,10 @@
 package rx;
 
 
-extern class Observer<T> {
+extern interface IObserver<T> {
+}
+
+
+extern class Observer<T> implements IObserver<T> {
 
 }

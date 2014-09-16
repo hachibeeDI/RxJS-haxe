@@ -9,5 +9,5 @@
 add your `.hxml`
 
 ```
--lib rx
+-lib RxJS
 ```

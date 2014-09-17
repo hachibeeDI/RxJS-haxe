@@ -19,5 +19,11 @@ add your `.hxml`
 ```csharp
 import rx.Observable;
 
-var ob: Observable<js.html.Event> = Observable.fromEvent(null, 'keyup');
+// ATTENTION: static methods are all in `ObservableStatic` class.
+var ob: Observable<js.html.Event> = ObservableStatic.fromEvent(null, "keyup");
 ```
+
+
+## LICENCE
+
+MIT

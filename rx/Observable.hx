@@ -300,10 +300,10 @@ extern class Observable<T> implements IObservable<T> {
   public function forEach(?onNext: T -> Void, ?onError: Dynamic -> Void, ?onCompleted: Void -> Void): IDisposable;
   public function toArray(): Observable<Iterable<T>>;
 
-  // @:native('catch')
-  // @:overload(function(handler: Dynamic -> IPromise<T>): Observable<T> {})
-  // @:overload(function(second: Observable<T>): Observable<T> {})
-  // public function catch_(handler: Dynamic -> Observable<T>): Observable<T>;
+  @:native('catch')
+  @:overload(function(handler: Dynamic -> IPromise<T>): Observable<T> {})
+  @:overload(function(second: Observable<T>): Observable<T> {})
+  public function catch_(handler: Dynamic -> Observable<T>): Observable<T>;
 
   /* alias for catch */
   @:overload(function(handler: Dynamic -> IPromise<T>): Observable<T> {})
